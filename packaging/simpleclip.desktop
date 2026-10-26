@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=SimpleClip
+GenericName=Instant Replay
+Comment=Save the last seconds of your screen with one shortcut
+Exec=@BIN@/sc-gui
+Icon=simpleclip
+Terminal=false
+Categories=AudioVideo;Video;Recorder;
+Keywords=clip;replay;record;capture;shadowplay;instant replay;
+StartupWMClass=simpleclip

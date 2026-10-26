@@ -1,0 +1,39 @@
+[graph]
+all-features = true
+
+[advisories]
+version = 2
+yanked = "deny"
+
+[licenses]
+version = 2
+# Permissive licences only. FFmpeg itself is a system library, not a cargo dependency.
+allow = [
+    "MIT",
+    "Apache-2.0",
+    "Apache-2.0 WITH LLVM-exception",
+    "BSD-2-Clause",
+    "BSD-3-Clause",
+    "ISC",
+    "Zlib",
+    "Unicode-3.0",
+    "MPL-2.0",
+    # ffmpeg-next / ffmpeg-sys-next Rust wrappers. The linked FFmpeg library is
+    # system LGPL (not a cargo dep); these bindings are WTFPL (permissive).
+    "WTFPL",
+    "BSL-1.0",
+    "0BSD",
+    "CC0-1.0",
+    "Unlicense",
+    # egui's bundled default fonts.
+    "OFL-1.1",
+    "LicenseRef-UFL-1.0",
+]
+confidence-threshold = 0.9
+
+[bans]
+multiple-versions = "warn"
+
+[sources]
+unknown-registry = "deny"
+unknown-git = "deny"

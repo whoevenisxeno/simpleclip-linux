@@ -1,0 +1,274 @@
+//! Visual design: a quiet, Apple-like system. Two palettes (light and dark,
+//! following the OS), one accent, generous spacing, rounded surfaces, hairline
+//! borders, and the system's own typeface and icon font where available.
+
+use egui::{Color32, FontFamily, FontId, Rounding, Stroke, TextStyle};
+
+/// Every colour the UI uses. Fetch with [`pal`]; nothing else hard-codes colours.
+#[derive(Clone, Copy)]
+pub struct Palette {
+    pub dark: bool,
+    /// Window background.
+    pub bg: Color32,
+    /// Sidebar background.
+    pub sidebar: Color32,
+    /// Raised surfaces: cards, grouped lists.
+    pub card: Color32,
+    /// A step above `card`: hovered rows, inset fields.
+    pub card_hi: Color32,
+    /// Hairline borders and dividers.
+    pub line: Color32,
+    pub text: Color32,
+    pub text_2: Color32,
+    pub text_3: Color32,
+    pub accent: Color32,
+    pub green: Color32,
+    pub red: Color32,
+    pub orange: Color32,
+}
+
+/// Corner radii, so every surface and control curves the same way. A shape set
+/// inside another uses the outer radius minus the gap between them.
+pub mod radius {
+    /// Segments, key caps, chips inside a control.
+    pub const SMALL: f32 = 8.0;
+    /// Buttons, fields, thumbnails.
+    pub const CONTROL: f32 = 10.0;
+    /// Small tiles and the status block.
+    pub const TILE: f32 = 14.0;
+    /// Cards and grouped lists.
+    pub const CARD: f32 = 16.0;
+    /// Dialogs and sheets.
+    pub const SHEET: f32 = 22.0;
+}
+
+pub const DARK: Palette = Palette {
+    dark: true,
+    bg: Color32::from_rgb(0x1c, 0x1c, 0x1e),
+    sidebar: Color32::from_rgb(0x25, 0x25, 0x28),
+    card: Color32::from_rgb(0x2c, 0x2c, 0x2e),
+    card_hi: Color32::from_rgb(0x3a, 0x3a, 0x3c),
+    line: Color32::from_rgb(0x3d, 0x3d, 0x40),
+    text: Color32::from_rgb(0xf5, 0xf5, 0xf7),
+    text_2: Color32::from_rgb(0x9a, 0x9a, 0xa0),
+    text_3: Color32::from_rgb(0x78, 0x78, 0x80),
+    accent: Color32::from_rgb(0x0a, 0x84, 0xff),
+    green: Color32::from_rgb(0x30, 0xd1, 0x58),
+    red: Color32::from_rgb(0xff, 0x45, 0x3a),
+    orange: Color32::from_rgb(0xff, 0x9f, 0x0a),
+};
+
+pub const LIGHT: Palette = Palette {
+    dark: false,
+    bg: Color32::from_rgb(0xf5, 0xf5, 0xf7),
+    sidebar: Color32::from_rgb(0xe9, 0xe9, 0xed),
+    card: Color32::from_rgb(0xff, 0xff, 0xff),
+    card_hi: Color32::from_rgb(0xf0, 0xf0, 0xf3),
+    line: Color32::from_rgb(0xdc, 0xdc, 0xe1),
+    text: Color32::from_rgb(0x1d, 0x1d, 0x1f),
+    text_2: Color32::from_rgb(0x6e, 0x6e, 0x73),
+    text_3: Color32::from_rgb(0x8e, 0x8e, 0x93),
+    accent: Color32::from_rgb(0x00, 0x7a, 0xff),
+    green: Color32::from_rgb(0x34, 0xc7, 0x59),
+    red: Color32::from_rgb(0xff, 0x3b, 0x30),
+    orange: Color32::from_rgb(0xff, 0x95, 0x00),
+};
+
+/// The palette in use: the chosen fixed theme, or the original light or dark one
+/// (with the accent colour laid over it, if one is chosen).
+pub fn pal(ctx: &egui::Context) -> Palette {
+    if let Some(p) = crate::themes::fixed_palette(ctx) {
+        return p;
+    }
+    let mut p = if ctx.style().visuals.dark_mode {
+        DARK
+    } else {
+        LIGHT
+    };
+    if let Some(a) = crate::themes::system_accent(ctx) {
+        p.accent = a;
+    }
+    p
+}
+
+pub fn pal_ui(ui: &egui::Ui) -> Palette {
+    pal(ui.ctx())
+}
+
+/// Font family for semibold text (titles, emphasis); falls back to the regular one.
+pub fn semibold() -> FontFamily {
+    FontFamily::Name("semibold".into())
+}
+
+/// Font family for the icon glyphs (Phosphor).
+pub fn icons() -> FontFamily {
+    FontFamily::Name("icons".into())
+}
+
+/// Icon glyphs from the Phosphor icon font (MIT), the same set of pictures the
+/// Windows app draws from Segoe Fluent Icons.
+pub mod icon {
+    use egui_phosphor::regular as p;
+    pub const HOME: &str = p::HOUSE;
+    pub const CLIPS: &str = p::FILM_STRIP;
+    pub const SETTINGS: &str = p::GEAR;
+    pub const PLAY: &str = p::PLAY;
+    pub const PAUSE: &str = p::PAUSE;
+    pub const CAMERA: &str = p::CAMERA;
+    pub const DELETE: &str = p::TRASH;
+    pub const FOLDER: &str = p::FOLDER;
+    pub const CUT: &str = p::SCISSORS;
+    pub const SAVE: &str = p::FLOPPY_DISK;
+    pub const SEARCH: &str = p::MAGNIFYING_GLASS;
+    pub const REFRESH: &str = p::ARROW_CLOCKWISE;
+    pub const BACK: &str = p::ARROW_LEFT;
+    pub const TAG: &str = p::TAG;
+    pub const ADD: &str = p::PLUS;
+    pub const MORE: &str = p::DOTS_THREE;
+    pub const VOLUME: &str = p::SPEAKER_HIGH;
+    pub const MUTE: &str = p::SPEAKER_X;
+    pub const COPY: &str = p::COPY;
+    pub const SHARE: &str = p::SHARE_NETWORK;
+}
+
+static UI_FONT: &[u8] = include_bytes!("../../../assets/fonts/Inter-Regular.ttf");
+static UI_SEMIBOLD: &[u8] = include_bytes!("../../../assets/fonts/Inter-SemiBold.ttf");
+
+/// Load the app's typeface (Inter, which the whole UI is laid out for), its
+/// semibold weight and the icon font.
+pub fn install_fonts(ctx: &egui::Context) {
+    let mut fonts = egui::FontDefinitions::default();
+    fonts
+        .font_data
+        .insert("ui".into(), egui::FontData::from_static(UI_FONT));
+    fonts
+        .families
+        .entry(FontFamily::Proportional)
+        .or_default()
+        .insert(0, "ui".into());
+    fonts.font_data.insert(
+        "ui-semibold".into(),
+        egui::FontData::from_static(UI_SEMIBOLD),
+    );
+    let mut family = vec!["ui-semibold".to_string()];
+    family.extend(fonts.families[&FontFamily::Proportional].clone());
+    fonts.families.insert(semibold(), family);
+
+    fonts
+        .font_data
+        .insert("icons".into(), egui_phosphor::Variant::Regular.font_data());
+    fonts.families.insert(icons(), vec!["icons".into()]);
+    ctx.set_fonts(fonts);
+    ctx.data_mut(|d| d.insert_persisted(egui::Id::new("has_icons"), true));
+}
+
+/// Whether the icon font loaded (otherwise icon buttons show their label).
+pub fn has_icons(ctx: &egui::Context) -> bool {
+    ctx.data_mut(|d| d.get_persisted::<bool>(egui::Id::new("has_icons")))
+        .unwrap_or(false)
+}
+
+/// Set up fonts, text sizes and the light/dark visuals. Call once at startup.
+pub fn apply(ctx: &egui::Context) {
+    install_fonts(ctx);
+    ctx.style_mut_of(egui::Theme::Dark, |s| style(s, DARK));
+    ctx.style_mut_of(egui::Theme::Light, |s| style(s, LIGHT));
+}
+
+pub(crate) fn style(s: &mut egui::Style, p: Palette) {
+    s.text_styles = [
+        (TextStyle::Heading, FontId::new(26.0, semibold())),
+        (TextStyle::Body, FontId::new(14.0, FontFamily::Proportional)),
+        (
+            TextStyle::Button,
+            FontId::new(14.0, FontFamily::Proportional),
+        ),
+        (
+            TextStyle::Small,
+            FontId::new(12.0, FontFamily::Proportional),
+        ),
+        (
+            TextStyle::Monospace,
+            FontId::new(13.0, FontFamily::Monospace),
+        ),
+    ]
+    .into();
+
+    s.spacing.item_spacing = egui::vec2(10.0, 10.0);
+    s.spacing.button_padding = egui::vec2(14.0, 7.0);
+    s.spacing.interact_size.y = 30.0;
+    s.spacing.slider_width = 180.0;
+    s.spacing.scroll.bar_width = 8.0;
+    s.spacing.scroll.floating = true;
+
+    let v = &mut s.visuals;
+    v.dark_mode = p.dark;
+    v.override_text_color = Some(p.text);
+    v.panel_fill = p.bg;
+    v.window_fill = p.card;
+    v.extreme_bg_color = p.card_hi;
+    v.faint_bg_color = p.card;
+    v.window_stroke = Stroke::new(1.0_f32, p.line);
+    v.window_rounding = Rounding::same(radius::CARD);
+    v.menu_rounding = Rounding::same(12.0);
+    v.window_shadow = float_shadow(&p);
+    v.popup_shadow = float_shadow(&p);
+    v.selection.bg_fill = p.accent.linear_multiply(0.35);
+    v.selection.stroke = Stroke::new(1.0_f32, p.accent);
+    v.hyperlink_color = p.accent;
+
+    let r = Rounding::same(8.0);
+    for (w, fill) in [
+        (&mut v.widgets.inactive, p.card_hi),
+        (&mut v.widgets.hovered, p.card_hi),
+        (&mut v.widgets.active, p.card_hi),
+    ] {
+        w.bg_fill = fill;
+        w.weak_bg_fill = fill;
+        w.rounding = r;
+        w.bg_stroke = Stroke::NONE;
+        w.fg_stroke = Stroke::new(1.0_f32, p.text);
+    }
+    v.widgets.hovered.weak_bg_fill = mix(p.card_hi, p.text, 0.06);
+    v.widgets.hovered.bg_fill = v.widgets.hovered.weak_bg_fill;
+    v.widgets.active.weak_bg_fill = mix(p.card_hi, p.text, 0.12);
+    v.widgets.active.bg_fill = v.widgets.active.weak_bg_fill;
+    v.widgets.noninteractive.bg_fill = p.card;
+    v.widgets.noninteractive.bg_stroke = Stroke::new(1.0_f32, p.line);
+    v.widgets.noninteractive.fg_stroke = Stroke::new(1.0_f32, p.text_2);
+    v.widgets.noninteractive.rounding = r;
+    v.widgets.open.rounding = r;
+}
+
+/// Blend `b` over `a` by `t` (0..1).
+pub fn mix(a: Color32, b: Color32, t: f32) -> Color32 {
+    let l = |x: u8, y: u8| (x as f32 + (y as f32 - x as f32) * t).round() as u8;
+    Color32::from_rgb(l(a.r(), b.r()), l(a.g(), b.g()), l(a.b(), b.b()))
+}
+
+/// The shadow under something that floats above the page (dialogs, menus): wide,
+/// soft and low, never a hard dark edge. On dark surfaces the lighter fill and
+/// the hairline do most of the separating, so it is kept gentle there.
+pub fn float_shadow(p: &Palette) -> egui::Shadow {
+    egui::Shadow {
+        offset: egui::vec2(0.0, 8.0),
+        blur: 30.0,
+        spread: 0.0,
+        color: Color32::from_black_alpha(if p.dark { 96 } else { 32 }),
+    }
+}
+
+/// A hair of shadow under a resting card in the light themes, so white cards
+/// lift off the grey page. Dark themes need none.
+pub fn card_shadow(p: &Palette) -> egui::Shadow {
+    if p.dark {
+        egui::Shadow::NONE
+    } else {
+        egui::Shadow {
+            offset: egui::vec2(0.0, 1.0),
+            blur: 3.0,
+            spread: 0.0,
+            color: Color32::from_black_alpha(15),
+        }
+    }
+}

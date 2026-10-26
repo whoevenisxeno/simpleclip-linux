@@ -1,0 +1,32 @@
+[package]
+name = "sc-gui"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[[bin]]
+name = "sc-gui"
+path = "src/main.rs"
+
+[dependencies]
+sc-core.workspace = true
+anyhow.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+interprocess.workspace = true
+crossbeam-channel.workspace = true
+directories.workspace = true
+eframe = { version = "0.29", default-features = false, features = ["glow", "wayland", "x11", "default_fonts"] }
+egui = "0.29"
+time = { version = "0.3.55", features = ["local-offset"] }
+png = "0.18.1"
+
+rfd = "0.17.2"
+sc-ffmpeg = { path = "../sc-ffmpeg" }
+rodio = { version = "0.20", default-features = false }
+trash = "5.2.9"
+wl-clipboard-rs = "0.9"
+libc = "0.2"
+egui-phosphor = "0.7"

@@ -1,0 +1,9 @@
+/target
+**/*.rs.bk
+*.mp4
+*.mkv
+*.png
+!docs/**/*.png
+.DS_Store
+/dist
+!assets/*.png

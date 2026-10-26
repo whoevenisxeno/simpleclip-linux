@@ -1,0 +1,35 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+jobs:
+  tarball:
+    runs-on: ubuntu-latest
+    container: archlinux:latest
+    permissions:
+      contents: write
+    steps:
+      - name: Install toolchain and libraries
+        run: |
+          pacman -Syu --noconfirm --needed base-devel git rust clang pkgconf ffmpeg libpipewire alsa-lib libva github-cli
+      - uses: actions/checkout@v4
+      - name: Build
+        run: cargo build --release --workspace
+      - name: Package
+        run: |
+          ver="${GITHUB_REF_NAME#v}"
+          mkdir -p "dist/simpleclip-$ver"
+          cp target/release/scd target/release/sc target/release/sc-gui "dist/simpleclip-$ver/"
+          cp LICENSE README.md "dist/simpleclip-$ver/"
+          tar -C dist -czf "simpleclip-$ver-linux-x86_64.tar.gz" "simpleclip-$ver"
+      - name: Publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          ver="${GITHUB_REF_NAME#v}"
+          git config --global --add safe.directory "$PWD"
+          # The release notes are the changelog entry for this version.
+          awk -v v="## $ver" '$0==v{f=1;next} /^## /{f=0} f' CHANGELOG.md > notes.md
+          gh release create "$GITHUB_REF_NAME" "simpleclip-$ver-linux-x86_64.tar.gz" --title "SimpleClip $ver" --notes-file notes.md

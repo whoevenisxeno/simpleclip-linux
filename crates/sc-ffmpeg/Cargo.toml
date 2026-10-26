@@ -1,0 +1,15 @@
+[package]
+name = "sc-ffmpeg"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+sc-core.workspace = true
+thiserror.workspace = true
+tracing.workspace = true
+crossbeam-channel.workspace = true
+# Linked from the system FFmpeg (VA-API, NVENC, libx264 as available).
+ffmpeg-next.workspace = true
