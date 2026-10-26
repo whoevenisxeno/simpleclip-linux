@@ -13,7 +13,7 @@ jobs:
     steps:
       - name: Install toolchain and libraries
         run: |
-          pacman -Syu --noconfirm --needed base-devel git rust clang pkgconf ffmpeg libpipewire alsa-lib libva github-cli
+          pacman -Syu --noconfirm --needed base-devel git rust clang pkgconf ffmpeg libpipewire alsa-lib libva libxkbcommon wayland libglvnd github-cli
       - uses: actions/checkout@v4
       - name: Build
         run: cargo build --release --workspace

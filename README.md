@@ -296,7 +296,7 @@ You need Rust (stable), clang (for bindgen) and the development files for FFmpeg
 libva. On Arch:
 
 ```
-sudo pacman -S --needed rust clang pkgconf ffmpeg libpipewire alsa-lib libva
+sudo pacman -S --needed rust clang pkgconf ffmpeg libpipewire alsa-lib libva libxkbcommon wayland
 ```
 
 Then `./packaging/install.sh`, or just `cargo build --release`. Checks:

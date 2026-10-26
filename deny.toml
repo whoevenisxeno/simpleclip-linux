@@ -4,6 +4,15 @@ all-features = true
 [advisories]
 version = 2
 yanked = "deny"
+# Unmaintained notices for crates that other dependencies pull in (egui's font
+# parser, the zbus family used by the portal and tray crates). None is a
+# vulnerability; they go when those crates move on.
+ignore = [
+    "RUSTSEC-2026-0192",
+    "RUSTSEC-2026-0370",
+    "RUSTSEC-2026-0371",
+    "RUSTSEC-2026-0372",
+]
 
 [licenses]
 version = 2
